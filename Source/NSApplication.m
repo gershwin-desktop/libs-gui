@@ -1333,6 +1333,35 @@ static BOOL _isAutolaunchChecked = NO;
           [_hidden_main makeMainWindow];
           _hidden_main = nil;
         }
+
+      // Heuristically detect dock-style activation and restore windows
+      if (flag && [self keyWindow] == nil && [self mainWindow] == nil)
+        {
+          BOOL hasAnyWindow = NO;
+          NSArray *windows = [self windows];
+          for (NSWindow *win in windows)
+            {
+              if ([win isMiniaturized])
+                {
+                  [win deminiaturize: nil];
+                  hasAnyWindow = YES;
+                }
+              else if ([win isVisible])
+                {
+                  [win orderFrontRegardless];
+                  hasAnyWindow = YES;
+                }
+            }
+
+      if (!hasAnyWindow)
+        {
+          id docController = [NSDocumentController sharedDocumentController];
+          if ([docController respondsToSelector: @selector(newDocument:)])
+            {
+              [docController newDocument: nil];
+            }
+        }
+      }
       
       if ([self keyWindow] != nil)
         {
