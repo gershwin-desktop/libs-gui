@@ -1354,12 +1354,15 @@ static BOOL _isAutolaunchChecked = NO;
             }
 
       if (!hasAnyWindow)
-        {
-          id docController = [NSDocumentController sharedDocumentController];
-          if ([docController respondsToSelector: @selector(newDocument:)])
-            {
-              [docController newDocument: nil];
-            }
+      {
+        id docController = [NSDocumentController sharedDocumentController];
+        // Only create documents for actual document-based applications
+        if ([docController respondsToSelector: @selector(newDocument:)] &&
+            [[docController documentClassNames] count] > 0 &&
+            [docController defaultType] != nil)
+          {
+            [docController newDocument: nil];
+          }
         }
       }
       
