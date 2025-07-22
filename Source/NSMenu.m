@@ -1086,14 +1086,13 @@ static BOOL menuBarVisible = YES;
     }
 
   if (_menu.mainMenuChanged)
-    {
-      NSInterfaceStyle style = NSInterfaceStyleForKey(@"NSMenuInterfaceStyle", nil);
-      if (style == NSWindows95InterfaceStyle || style == NSMacintoshInterfaceStyle)
-        {
-          [[GSTheme theme] updateAllWindowsWithMenu: self];
-        }
-      _menu.mainMenuChanged = NO;
-    }
+  {
+    if (NSInterfaceStyleForKey(@"NSMenuInterfaceStyle", nil) == NSWindows95InterfaceStyle)
+      {
+        [[GSTheme theme] updateAllWindowsWithMenu: self];
+      }
+    _menu.mainMenuChanged = NO;
+  }
 
   if (_menu.needsSizing && [self _isVisible])
     {
@@ -1711,8 +1710,7 @@ static BOOL menuBarVisible = YES;
 
 - (void) applicationDidFinishLaunching:(NSNotification *)notification
 {
-  NSInterfaceStyle style = NSInterfaceStyleForKey(@"NSMenuInterfaceStyle", nil);
-  if (style == NSWindows95InterfaceStyle || style == NSMacintoshInterfaceStyle)
+  if (NSInterfaceStyleForKey(@"NSMenuInterfaceStyle", nil) == NSWindows95InterfaceStyle)
     {
       [[GSTheme theme] updateAllWindowsWithMenu: [NSApp mainMenu]];
     }
