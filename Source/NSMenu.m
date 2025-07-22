@@ -1087,9 +1087,16 @@ static BOOL menuBarVisible = YES;
 
   if (_menu.mainMenuChanged)
   {
-    if (NSInterfaceStyleForKey(@"NSMenuInterfaceStyle", nil) == NSWindows95InterfaceStyle)
+    NSInterfaceStyle style = NSInterfaceStyleForKey(@"NSMenuInterfaceStyle", nil);
+    if (style == NSWindows95InterfaceStyle)
       {
         [[GSTheme theme] updateAllWindowsWithMenu: self];
+      }
+    else if (style == NSMacintoshInterfaceStyle)
+      {
+        [[NSNotificationCenter defaultCenter] 
+          postNotificationName: @"NSMacintoshMenuDidChangeNotification" 
+                        object: self];
       }
     _menu.mainMenuChanged = NO;
   }
@@ -1710,9 +1717,16 @@ static BOOL menuBarVisible = YES;
 
 - (void) applicationDidFinishLaunching:(NSNotification *)notification
 {
-  if (NSInterfaceStyleForKey(@"NSMenuInterfaceStyle", nil) == NSWindows95InterfaceStyle)
+  NSInterfaceStyle style = NSInterfaceStyleForKey(@"NSMenuInterfaceStyle", nil);
+  if (style == NSWindows95InterfaceStyle)
     {
       [[GSTheme theme] updateAllWindowsWithMenu: [NSApp mainMenu]];
+    }
+  else if (style == NSMacintoshInterfaceStyle)
+    {
+      [[NSNotificationCenter defaultCenter] 
+        postNotificationName: @"NSMacintoshMenuDidChangeNotification" 
+                      object: [NSApp mainMenu]];
     }
   [self _showTornOffMenuIfAny: notification];
 
