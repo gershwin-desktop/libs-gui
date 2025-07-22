@@ -1087,7 +1087,8 @@ static BOOL menuBarVisible = YES;
 
   if (_menu.mainMenuChanged)
     {
-      if (NSInterfaceStyleForKey(@"NSMenuInterfaceStyle", nil) == NSWindows95InterfaceStyle)
+      NSInterfaceStyle style = NSInterfaceStyleForKey(@"NSMenuInterfaceStyle", nil);
+      if (style == NSWindows95InterfaceStyle || style == NSMacintoshInterfaceStyle)
         {
           [[GSTheme theme] updateAllWindowsWithMenu: self];
         }
@@ -1710,8 +1711,8 @@ static BOOL menuBarVisible = YES;
 
 - (void) applicationDidFinishLaunching:(NSNotification *)notification
 {
-  if (NSInterfaceStyleForKey(@"NSMenuInterfaceStyle", nil) == 
-      NSWindows95InterfaceStyle)
+  NSInterfaceStyle style = NSInterfaceStyleForKey(@"NSMenuInterfaceStyle", nil);
+  if (style == NSWindows95InterfaceStyle || style == NSMacintoshInterfaceStyle)
     {
       [[GSTheme theme] updateAllWindowsWithMenu: [NSApp mainMenu]];
     }
@@ -1734,9 +1735,13 @@ static BOOL menuBarVisible = YES;
 {
   if ([self _isMain])
   {
-    [self display];
-    // we must make sure that any attached submenu is visible too.
-    [[self attachedMenu] display];
+    // Let theme decide if menu should display
+    if ([[GSTheme theme] proposedVisibility: YES forMenu: self])
+      {
+        [self display];
+        // we must make sure that any attached submenu is visible too.
+        [[self attachedMenu] display];
+      }
   }
 }
 
@@ -2045,8 +2050,18 @@ static BOOL menuBarVisible = YES;
 
           if ([NSApp isActive])
             {
-              [self display];
+              // Let theme decide if menu should display
+              if ([[GSTheme theme] proposedVisibility: YES forMenu: self])
+                {
+                  [self display];
+                }
             }
+        }
+      
+      // Allow themes to handle both Windows95 and Macintosh styles
+      if (newStyle == NSWindows95InterfaceStyle || newStyle == NSMacintoshInterfaceStyle)
+        {
+          [[GSTheme theme] updateAllWindowsWithMenu: self];
         }
     }
   else 
@@ -2191,4 +2206,3 @@ static BOOL menuBarVisible = YES;
 }
 
 @end
-
