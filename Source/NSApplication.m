@@ -4222,16 +4222,14 @@ struct _DelegateWrapper
     @selector(applicationShouldTerminateAfterLastWindowClosed:)])
     {
       if ([_delegate
-	applicationShouldTerminateAfterLastWindowClosed: self])
+        applicationShouldTerminateAfterLastWindowClosed: self])
         {
           [self terminate: self];
         }
     }
-  /* wlux 2009-10-17: If we use MS Windows style menus, terminate
-     the application by default when the last window is closed. */
-  else if (NSInterfaceStyleForKey(@"NSMenuInterfaceStyle", nil) == 
-	   NSWindows95InterfaceStyle)
+  else
     {
+      // Terminate by default for all interface styles when last window closes
       [self terminate: self];
     }
 }
