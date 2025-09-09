@@ -4218,6 +4218,12 @@ struct _DelegateWrapper
 
 - (void) _lastWindowClosed
 {
+  NSString *appName = [[NSProcessInfo processInfo] processName];
+  if ([appName isEqualToString:@"GWorkspace"])
+    {
+      return; // Do not terminate Workspace
+    }
+    
   if ([_delegate respondsToSelector:
     @selector(applicationShouldTerminateAfterLastWindowClosed:)])
     {
