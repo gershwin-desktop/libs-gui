@@ -4218,10 +4218,13 @@ struct _DelegateWrapper
 
 - (void) _lastWindowClosed
 {
+  // Check if this is one of the apps that shouldn't terminate
   NSString *appName = [[NSProcessInfo processInfo] processName];
-  if ([appName isEqualToString:@"GWorkspace"])
+  if ([appName isEqualToString:@"GWorkspace"] ||
+      [appName isEqualToString:@"Workspace"] ||
+      [appName isEqualToString:@"TalkSoup"])
     {
-      return; // Do not terminate Workspace
+      return;  // Don't terminate these apps
     }
     
   if ([_delegate respondsToSelector:
