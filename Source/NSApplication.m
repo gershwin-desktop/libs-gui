@@ -4218,11 +4218,18 @@ struct _DelegateWrapper
 
 - (void) _lastWindowClosed
 {
-  // Check if this is one of the apps that shouldn't terminate
   NSString *appName = [[NSProcessInfo processInfo] processName];
+  NSString *bundleName = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleExecutable"];
+  NSString *bundlePath = [[NSBundle mainBundle] bundlePath];
+  
+  // Check all possible variations
   if ([appName isEqualToString:@"GWorkspace"] ||
       [appName isEqualToString:@"Workspace"] ||
-      [appName isEqualToString:@"TalkSoup"])
+      [appName isEqualToString:@"TalkSoup"] ||
+      (bundleName && [bundleName isEqualToString:@"GWorkspace"]) ||
+      (bundleName && [bundleName isEqualToString:@"Workspace"]) ||
+      (bundlePath && [bundlePath rangeOfString:@"Workspace" options:NSCaseInsensitiveSearch].location != NSNotFound) ||
+      (bundlePath && [bundlePath rangeOfString:@"GWorkspace" options:NSCaseInsensitiveSearch].location != NSNotFound))
     {
       return;  // Don't terminate these apps
     }
