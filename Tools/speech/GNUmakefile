@@ -1,5 +1,8 @@
 ETOILE_CORE_MODULE = YES
 
+GNUSTEP_INSTALLATION_DOMAIN = SYSTEM
+APP_INSTALL_DIR = /System/Library/CoreServices/Applications
+
 include $(GNUSTEP_MAKEFILES)/common.make
 
 # Set the default.  Eventually this should be conditional.
