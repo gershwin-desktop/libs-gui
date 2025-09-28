@@ -1,7 +1,6 @@
 ETOILE_CORE_MODULE = YES
 
-GNUSTEP_INSTALLATION_DOMAIN = SYSTEM
-APP_INSTALL_DIR = $(GNUSTEP_SYSTEM_LIBRARY)/CoreServices/Applications
+APP_INSTALL_DIR = $(DESTDIR)/System/Library/CoreServices/Applications
 
 include $(GNUSTEP_MAKEFILES)/common.make
 
