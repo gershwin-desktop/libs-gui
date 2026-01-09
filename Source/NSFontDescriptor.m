@@ -64,9 +64,10 @@
 + (id) fontDescriptorWithName: (NSString*)name size: (CGFloat)size
 {
   return [self fontDescriptorWithFontAttributes:
+    // Change upstreamed: https://github.com/gnustep/libs-gui/pull/380
     [NSDictionary dictionaryWithObjectsAndKeys:
       name, NSFontNameAttribute,
-      [NSString stringWithFormat: @"%f", size], NSFontSizeAttribute,
+      [NSNumber numberWithDouble: size], NSFontSizeAttribute,
       nil]];
 }
 
@@ -110,7 +111,8 @@
 - (NSFontDescriptor*) fontDescriptorWithSize: (CGFloat)size
 {
   return [self fontDescriptorByAddingAttributes:
-    [NSDictionary dictionaryWithObject: [NSString stringWithFormat:@"%f", size]
+    // Change upstreamed: https://github.com/gnustep/libs-gui/pull/380
+    [NSDictionary dictionaryWithObject: [NSNumber numberWithDouble: size]
 				forKey: NSFontSizeAttribute]];
 }
 
