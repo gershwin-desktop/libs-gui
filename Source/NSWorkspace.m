@@ -1270,9 +1270,49 @@ inFileViewerRootedAtPath: (NSString*)rootFullpath
 
       r = NO;
       devName = [fsName lastPathComponent];
-      // This is a very crude way of removing the partition number
-      if ([devName length] > 3)
-	devName = [devName substringToIndex: 3];
+      // Change is upstreamed: https://github.com/gnustep/libs-gui/pull/381
+      
+      /* Extract block device name by removing partition suffix
+       * Handle various device naming schemes:
+       *   sd*, hd* → just remove trailing digits (sda1 → sda)
+       *   nvme*n*p* → remove trailing p<digits> (nvme0n1p1 → nvme0n1)
+       *   mmcblk*p* → remove trailing p<digits> (mmcblk0p1 → mmcblk0)
+       *   loop*, ram*, sr* → use as-is
+       */
+      if ([devName hasPrefix:@"nvme"] || [devName hasPrefix:@"mmcblk"])
+        {
+          /* For nvme and mmcblk devices, partition names have a 'p' separator
+           * e.g., nvme0n1p1, mmcblk0p1 */
+          NSRange pRange = [devName rangeOfString:@"p" options:NSBackwardsSearch];
+          if (pRange.location != NSNotFound)
+            {
+              /* Check if everything after 'p' is digits */
+              NSString *suffix = [devName substringFromIndex:pRange.location + 1];
+              NSCharacterSet *nonDigits = [[NSCharacterSet decimalDigitCharacterSet] invertedSet];
+              if ([suffix rangeOfCharacterFromSet:nonDigits].location == NSNotFound && [suffix length] > 0)
+                {
+                  /* It's a partition, strip it */
+                  devName = [devName substringToIndex:pRange.location];
+                }
+            }
+        }
+      else if ([devName hasPrefix:@"sd"] || [devName hasPrefix:@"hd"] || 
+               [devName hasPrefix:@"vd"] || [devName hasPrefix:@"xvd"])
+        {
+          /* For sd/hd/vd devices, remove trailing digits (sda1 → sda) */
+          NSCharacterSet *digits = [NSCharacterSet decimalDigitCharacterSet];
+          NSInteger i = [devName length] - 1;
+          while (i >= 0 && [digits characterIsMember:[devName characterAtIndex:i]])
+            {
+              i--;
+            }
+          if (i < (NSInteger)[devName length] - 1)
+            {
+              /* Found trailing digits, strip them */
+              devName = [devName substringToIndex:i + 1];
+            }
+        }
+      /* For other devices (loop, ram, sr, etc.), use as-is */
 
       devInfoPath = [@"/sys/block" stringByAppendingPathComponent:devName];
       devInfoPath = [devInfoPath stringByAppendingPathComponent:@"removable"];
@@ -2161,6 +2201,14 @@ launchIdentifiers: (NSArray **)identifiers
       [[NSUserDefaults standardUserDefaults] setObject: reservedMountNames 
 						forKey: @"GSReservedMountNames"];
     }
+  
+  /* Ensure optical media filesystem types are never treated as reserved,
+   * even if they were incorrectly added to defaults */
+  NSMutableArray *filtered = [NSMutableArray arrayWithArray:reservedMountNames];
+  [filtered removeObject:@"iso9660"];
+  [filtered removeObject:@"udf"];
+  [filtered removeObject:@"iso"];
+  reservedMountNames = filtered;
 
 #if	defined(__MINGW32__)
   NSFileManager		*mgr = [NSFileManager defaultManager];
@@ -2208,6 +2256,15 @@ launchIdentifiers: (NSArray **)identifiers
   
   n = getmntinfo(&m, MNT_NOWAIT);
   names = [NSMutableArray arrayWithCapacity: n];
+  
+  /* Build filter for optical media filesystems - same as Linux path */
+  NSMutableArray *filtered = [NSMutableArray arrayWithArray:reservedMountNames];
+  [filtered removeObject:@"iso9660"];
+  [filtered removeObject:@"udf"];
+  [filtered removeObject:@"iso"];
+  [filtered removeObject:@"cd9660"];  /* BSD name for iso9660 */
+  NSArray *opticalFSTypes = filtered;
+  
   for (i = 0; i < n; i++)
     {
       /* NB For now assume that all local volumes are mounted from a device
@@ -2216,6 +2273,17 @@ launchIdentifiers: (NSArray **)identifiers
       */
       if (strncmp(m[i].f_mntfromname, "/dev/", 5) == 0)
         {
+#if !defined(HAVE_STATVFS) || !defined(__NetBSD__)
+          /* On BSDs with statfs, we can check f_fstypename */
+          NSString *fstype = nil;
+#if defined(HAVE_STRUCT_STATFS_F_FSTYPENAME)
+          fstype = [NSString stringWithUTF8String: m[i].f_fstypename];
+#endif
+          /* Skip if this is a reserved filesystem type (but not optical media) */
+          if (fstype && [opticalFSTypes containsObject: fstype]) {
+            continue;
+          }
+#endif
 	  [names addObject:
 		   [mgr stringWithFileSystemRepresentation: m[i].f_mntonname
 			length: strlen(m[i].f_mntonname)]];
@@ -2509,6 +2577,7 @@ launchIdentifiers: (NSArray **)identifiers
   bundle = [self bundleForApp: fullPath];
   if (bundle == nil)
     {
+      NSLog(@"NSWorkspace: appIconForApp: bundle not found for app '%@'", appName);
       return nil;
     }
   
