@@ -2258,7 +2258,7 @@ launchIdentifiers: (NSArray **)identifiers
   names = [NSMutableArray arrayWithCapacity: n];
   
   /* Build filter for optical media filesystems - same as Linux path */
-  NSMutableArray *filtered = [NSMutableArray arrayWithArray:reservedMountNames];
+  filtered = [NSMutableArray arrayWithArray:reservedMountNames];
   [filtered removeObject:@"iso9660"];
   [filtered removeObject:@"udf"];
   [filtered removeObject:@"iso"];
